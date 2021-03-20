@@ -102,11 +102,23 @@ func main() {
 }
 ```
 
+A workaround for permission deny in macOS Catalina.
+Thx to https://stackoverflow.com/questions/60654834/using-mprotect-to-make-text-segment-writable-on-macos/61924409
+The answer from Apple：https://developer.apple.com/forums/thread/133183
+The problem is caused by mProtect fail because the default value of _TEXT was changed to R+E rather than RWE before in Catalina.
+The mProject function could not make a region that resides with _TEXT writeable.
+```
+# cd [path of test files]
+go test -c -gcflags=-l -o test-bin .
+printf '\x07' | dd of=test-bin bs=1 seek=160 count=1 conv=notrunc
+./test-bin
+```
 ## Notes
 
 1. Monkey sometimes fails to patch a function if inlining is enabled. Try running your tests with inlining disabled, for example: `go test -gcflags=-l`. The same command line argument can also be used for build.
 2. Monkey won't work on some security-oriented operating system that don't allow memory pages to be both write and execute at the same time. With the current approach there's not really a reliable fix for this.
 3. Monkey is not threadsafe. Or any kind of safe.
-4. I've tested monkey on OSX 10.10.2 and Ubuntu 14.04. It should work on any unix-based x86 or x86-64 system.
+4. the author tested monkey on OSX 10.10.2 and Ubuntu 14.04.
+5. IN macOS Catalina sometimes panic with permission deny.
 
 © Bouke van der Bijl
